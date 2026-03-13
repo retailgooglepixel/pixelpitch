@@ -34,7 +34,6 @@
         canvas {
             width: 100%;
             height: 100%;
-            /* Wir steuern die Transition jetzt präziser über JS für den Sound-Sync */
             transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1);
         }
 
@@ -73,7 +72,6 @@
         }
         .animate-pop { animation: popIn 0.5s cubic-bezier(0.17, 0.67, 0.83, 0.67); }
 
-        /* Joker Shake Animation */
         @keyframes shake {
             0%, 100% { transform: rotate(0deg); }
             25% { transform: rotate(-10deg); }
@@ -118,7 +116,7 @@
                         <button onclick="addName()" class="btn-pixel px-4 py-2 rounded-lg font-bold">Add</button>
                     </div>
                     <div id="namesList" class="flex flex-wrap gap-2 text-xs min-h-[40px]">
-                        <!-- Namen erscheinen hier -->
+                        <!-- Namen erscheinen hier mit Lösch-Option -->
                     </div>
                 </div>
             </div>
@@ -135,7 +133,7 @@
                         <h3 class="text-xs font-bold text-slate-500 uppercase">Themen-Pool (manuell entfernbar)</h3>
                     </div>
                     <ul id="topicPool" class="text-[10px] text-slate-400 grid grid-cols-2 gap-2">
-                        <!-- Themenliste -->
+                        <!-- Themenliste erscheint hier -->
                     </ul>
                 </div>
             </div>
@@ -170,7 +168,10 @@
                 <div id="statusMsg" class="text-xs text-slate-400 uppercase tracking-widest font-bold"></div>
             </div>
 
-            <button onclick="closeModal()" class="btn-pixel px-12 py-4 rounded-xl font-bold text-lg w-full md:w-auto">Verstanden</button>
+            <div class="flex flex-col md:flex-row gap-4 justify-center">
+                <button onclick="closeModal()" class="btn-pixel px-12 py-4 rounded-xl font-bold text-lg flex-1">Verstanden</button>
+                <button onclick="rerollLast()" class="bg-white/10 hover:bg-white/20 border border-white/20 px-8 py-4 rounded-xl font-bold text-lg flex-1 transition-all">Abwesend? Nochmal drehen</button>
+            </div>
         </div>
     </div>
 
@@ -199,7 +200,7 @@
         function playWinSound() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const now = audioCtx.currentTime;
-            const freqs = [523.25, 659.25, 783.99, 1046.50]; // C-Dur Arpeggio
+            const freqs = [523.25, 659.25, 783.99, 1046.50];
             freqs.forEach((f, i) => {
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
@@ -227,6 +228,7 @@
         let namesAngle = 0;
         let topicsAngle = 0;
         let isSpinning = false;
+        let lastWinnerName = "";
 
         function init() {
             updateNamesList();
@@ -241,72 +243,43 @@
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
             const radius = canvas.width / 2 - 10;
-
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
             if (items.length === 0) {
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-                ctx.fillStyle = 'rgba(255,255,255,0.05)';
-                ctx.fill();
-                ctx.fillStyle = '#64748b';
-                ctx.font = 'italic 20px Inter';
-                ctx.textAlign = 'center';
-                ctx.fillText(emptyText, centerX, centerY);
-                return;
+                ctx.beginPath(); ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+                ctx.fillStyle = 'rgba(255,255,255,0.05)'; ctx.fill();
+                ctx.fillStyle = '#64748b'; ctx.font = 'italic 20px Inter'; ctx.textAlign = 'center';
+                ctx.fillText(emptyText, centerX, centerY); return;
             }
-
             const arcSize = (2 * Math.PI) / items.length;
-
             items.forEach((item, i) => {
                 const angle = i * arcSize;
-                ctx.beginPath();
-                ctx.moveTo(centerX, centerY);
+                ctx.beginPath(); ctx.moveTo(centerX, centerY);
                 ctx.arc(centerX, centerY, radius, angle, angle + arcSize);
-                
-                if (item === "Joker") {
-                    ctx.fillStyle = "#f59e0b";
-                } else {
-                    ctx.fillStyle = colors[i % colors.length];
-                }
-                
-                ctx.fill();
-                ctx.strokeStyle = 'rgba(15, 23, 42, 0.4)';
-                ctx.lineWidth = 1;
-                ctx.stroke();
-
-                ctx.save();
-                ctx.translate(centerX, centerY);
-                ctx.rotate(angle + arcSize / 2);
-                
-                ctx.textAlign = "right";
-                ctx.fillStyle = "#fff";
-                
-                if (item === "Joker") {
-                    ctx.font = "bold 16px Inter";
-                    ctx.fillText("🤡 Joker", radius - 15, 6);
-                } else {
-                    ctx.font = "bold 15px Inter";
-                    ctx.fillText(item.length > 18 ? item.substring(0, 15) + "..." : item, radius - 25, 6);
-                }
+                ctx.fillStyle = item === "Joker" ? "#f59e0b" : colors[i % colors.length];
+                ctx.fill(); ctx.strokeStyle = 'rgba(15, 23, 42, 0.4)'; ctx.lineWidth = 1; ctx.stroke();
+                ctx.save(); ctx.translate(centerX, centerY); ctx.rotate(angle + arcSize / 2);
+                ctx.textAlign = "right"; ctx.fillStyle = "#fff";
+                if (item === "Joker") { ctx.font = "bold 16px Inter"; ctx.fillText("🤡 Joker", radius - 15, 6); }
+                else { ctx.font = "bold 15px Inter"; ctx.fillText(item.length > 18 ? item.substring(0, 15) + "..." : item, radius - 25, 6); }
                 ctx.restore();
             });
-
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, 40, 0, 2 * Math.PI);
-            ctx.fillStyle = '#0f172a';
-            ctx.fill();
+            ctx.beginPath(); ctx.arc(centerX, centerY, 40, 0, 2 * Math.PI); ctx.fillStyle = '#0f172a'; ctx.fill();
         }
 
         function addName() {
             const input = document.getElementById('nameInput');
             const name = input.value.trim();
             if (name && !isSpinning) {
-                names.push(name);
-                input.value = '';
-                updateNamesList();
-                drawWheel('namesWheel', names);
+                names.push(name); input.value = '';
+                updateNamesList(); drawWheel('namesWheel', names);
             }
+        }
+
+        function removeName(index) {
+            if (isSpinning) return;
+            names.splice(index, 1);
+            updateNamesList();
+            drawWheel('namesWheel', names);
         }
 
         function removeTopic(index) {
@@ -320,7 +293,13 @@
             const container = document.getElementById('namesList');
             const countEl = document.getElementById('namesCount');
             if (countEl) countEl.innerText = `${names.length} Personen`;
-            container.innerHTML = names.map(n => `<span class="bg-white/5 border border-white/10 px-2 py-1 rounded text-slate-300 font-medium">${n}</span>`).join('');
+            
+            container.innerHTML = names.map((n, idx) => `
+                <span class="group flex items-center gap-1 bg-white/5 border border-white/10 px-2 py-1 rounded text-slate-300 font-medium hover:bg-white/10 transition-all">
+                    ${n}
+                    <button onclick="removeName(${idx})" class="text-red-400 opacity-0 group-hover:opacity-100 hover:scale-125 transition-all font-bold px-1">✕</button>
+                </span>
+            `).join('');
         }
 
         function renderTopicList() {
@@ -333,28 +312,19 @@
             `).join('');
         }
 
-        // Ticking-Sync Hilfsfunktion
         function startTickLoop(totalDegrees, itemCount) {
             let lastSegment = -1;
             const startTime = performance.now();
             const duration = 4000;
             const segmentAngle = 360 / itemCount;
-
             function check() {
                 const now = performance.now();
                 const progress = (now - startTime) / duration;
                 if (progress >= 1) return;
-
-                // Cubic-bezier approximation für den Sound-Sync
-                // Da wir CSS cubic-bezier(0.15, 0, 0.15, 1) nutzen:
                 const easeOut = 1 - Math.pow(1 - progress, 3); 
                 const currentRotation = totalDegrees * easeOut;
                 const currentSegment = Math.floor((currentRotation % 360) / segmentAngle);
-
-                if (currentSegment !== lastSegment) {
-                    playTick();
-                    lastSegment = currentSegment;
-                }
+                if (currentSegment !== lastSegment) { playTick(); lastSegment = currentSegment; }
                 requestAnimationFrame(check);
             }
             requestAnimationFrame(check);
@@ -363,7 +333,6 @@
         async function spinBoth() {
             if (isSpinning || names.length === 0 || topics.length === 0) return;
             if (audioCtx.state === 'suspended') audioCtx.resume();
-            
             isSpinning = true;
             document.getElementById('masterSpinBtn').disabled = true;
             document.getElementById('jokerSubtext').classList.add('hidden');
@@ -374,44 +343,33 @@
 
             const nameCanvas = document.getElementById('namesWheel');
             const topicCanvas = document.getElementById('topicsWheel');
-
-            const nRot = 8 + Math.random() * 5;
-            const nExtra = Math.random() * 360;
-            const tRot = 8 + Math.random() * 5;
-            const tExtra = Math.random() * 360;
-
-            const nTotal = nRot * 360 + nExtra;
-            const tTotal = tRot * 360 + tExtra;
-
-            namesAngle += nTotal;
-            topicsAngle += tTotal;
-
+            const nRot = 8 + Math.random() * 5; const nExtra = Math.random() * 360;
+            const tRot = 8 + Math.random() * 5; const tExtra = Math.random() * 360;
+            const nTotal = nRot * 360 + nExtra; const tTotal = tRot * 360 + tExtra;
+            namesAngle += nTotal; topicsAngle += tTotal;
             nameCanvas.style.transform = `rotate(${namesAngle}deg)`;
             topicCanvas.style.transform = `rotate(${topicsAngle}deg)`;
-
-            // Sound-Loop starten (wir syncen auf das Namensrad, da es meist mehr Segmente hat)
             startTickLoop(nTotal, names.length);
 
             setTimeout(() => {
                 const nDeg = (360 - (namesAngle % 360) + 270) % 360;
                 const nIdx = Math.floor(nDeg / (360 / names.length)) % names.length;
                 const winnerName = names[nIdx];
-
                 const tDeg = (360 - (topicsAngle % 360) + 270) % 360;
                 const tIdx = Math.floor(tDeg / (360 / topics.length)) % topics.length;
                 const winnerTopic = topics[tIdx];
 
+                lastWinnerName = winnerName;
                 playWinSound();
-
                 if (winnerTopic === "Joker") {
                     document.getElementById('jokerSubtext').classList.remove('hidden');
                     document.getElementById('jokerIconLeft').classList.remove('hidden');
                     document.getElementById('jokerIconRight').classList.remove('hidden');
                 }
-                
                 showCombinedResult(winnerName, winnerTopic);
                 saveToGoogleSheets(winnerName, winnerTopic);
-
+                
+                // Name entfernen nach der Auswahl
                 names.splice(nIdx, 1);
                 
                 setTimeout(() => {
@@ -423,6 +381,19 @@
             }, 4100);
         }
 
+        function rerollLast() {
+            if (lastWinnerName) {
+                names.push(lastWinnerName);
+                lastWinnerName = "";
+                updateNamesList();
+                drawWheel('namesWheel', names);
+                closeModal();
+                setTimeout(() => {
+                    spinBoth();
+                }, 300);
+            }
+        }
+
         function showCombinedResult(name, topic) {
             document.getElementById('winnerName').innerText = name;
             document.getElementById('winnerTopic').innerText = topic;
@@ -432,17 +403,12 @@
         async function saveToGoogleSheets(name, topic) {
             const status = document.getElementById('statusMsg');
             if (!scriptURL || scriptURL.length < 20) return;
-
             status.innerText = "SPEICHERE IN GOOGLE SHEETS...";
             status.className = "text-xs text-sky-400 uppercase tracking-widest animate-pulse font-bold";
-            
             const payload = { name, topic, timestamp: new Date().toLocaleString("de-DE") };
-
             try {
                 await fetch(scriptURL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    cache: 'no-cache',
+                    method: 'POST', mode: 'no-cors', cache: 'no-cache',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
