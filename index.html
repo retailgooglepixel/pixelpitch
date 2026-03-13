@@ -1,773 +1,390 @@
-
 <!DOCTYPE html>
-<html lang="en" class="h-full">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Magenta & Google Pixel: A Strategic Partnership Proposal</title>
-
-    <!-- React and ReactDOM UMD builds for better file:/// compatibility -->
-    <script src="https://unpkg.com/react@18.2.0/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.development.js" crossorigin></script>
-
+    <title>Pixel Pitch - Glücksräder</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap');
+
         body {
-            font-family: 'Google Sans', sans-serif;
-            background-color: #f9fafb; /* bg-gray-50 */
-            color: #1f2937; /* text-gray-800 */
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
         }
-        /* Additional global styles if needed */
+
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 320px;
+            height: 320px;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1);
+        }
+
+        .pointer {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 30px solid #f8fafc;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+            z-index: 10;
+        }
+
+        .btn-pixel {
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            transition: all 0.3s ease;
+        }
+
+        .btn-pixel:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+        }
+
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop { animation: popIn 0.5s cubic-bezier(0.17, 0.67, 0.83, 0.67); }
+
+        /* Joker Shake Animation */
+        @keyframes shake {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-10deg); }
+            75% { transform: rotate(10deg); }
+        }
+        .joker-animation {
+            display: inline-block;
+            animation: shake 0.5s infinite ease-in-out;
+        }
     </style>
 </head>
-<body class="h-full antialiased">
-    <div id="root" class="flex flex-col min-h-screen"></div>
+<body class="p-4 md:p-8">
 
-    <script type="module">
-      // React and ReactDOM are now global, no need for explicit imports here.
-      // import React from 'react'; 
-      // import ReactDOM from 'react-dom/client';
+    <header class="text-center mb-12">
+        <h1 class="text-5xl md:text-7xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-400">
+            Pixel Pitch
+        </h1>
+        <p class="text-slate-400 mt-2">Wähle den Pitcher und das Thema</p>
+    </header>
 
-      const CE = React.createElement;
+    <main class="max-w-6xl mx-auto">
+        <div class="flex flex-col items-center mb-8">
+            <button onclick="spinBoth()" id="masterSpinBtn" class="px-12 py-6 rounded-2xl btn-pixel text-2xl font-black uppercase tracking-[0.2em] shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed">
+                PITCH STARTEN!
+            </button>
+        </div>
 
-      // --- Inlined GoogleColorLogoIcon.tsx (converted to JS) ---
-      const GoogleColorLogoIcon = ({ className }) => {
-        return CE("svg", { className: className || "w-8 h-8", fill: "currentColor", viewBox: "0 0 24 24" },
-          CE("path", { d: "M22.56,12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26,1.37-1.04,2.53-2.21,3.31v2.77h3.57c2.08-1.92,3.28-4.74,3.28-8.09Z", fill: "#4285f4" }),
-          CE("path", { d: "M12,23c2.97,0,5.46-.98,7.28-2.66l-3.57-2.77c-.98,.66-2.23,1.06-3.71,1.06-2.86,0-5.29-1.93-6.16-4.53H2.18v2.84C3.99,20.53,7.7,23,12,23Z", fill: "#34a853" }),
-          CE("path", { d: "M5.84,14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43,.35-2.09V7.07H2.18C1.43,8.55,1,10.22,1,12s.43,3.45,1.18,4.93l3.66-2.84Z", fill: "#fbbc05" }),
-          CE("path", { d: "M12,5.38c1.62,0,3.06,.56,4.21,1.64l3.15-3.15C17.45,2.09,14.97,1,12,1,7.7,1,3.99,3.47,2.18,7.07l3.66,2.84c.87-2.6,3.3-4.53,6.16-4.53Z", fill: "#ea4335" })
-        );
-      };
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Linke Seite: Namensrad -->
+            <div class="glass p-6 flex flex-col items-center">
+                <div class="flex justify-between w-full items-center mb-6">
+                    <h2 class="text-2xl font-semibold text-sky-400">Pitcher</h2>
+                    <span id="namesCount" class="text-xs text-slate-500 bg-white/5 px-2 py-1 rounded">0 Personen</span>
+                </div>
+                <div class="wheel-container mb-8">
+                    <div class="pointer"></div>
+                    <canvas id="namesWheel" width="500" height="500"></canvas>
+                </div>
+                <div class="w-full space-y-4">
+                    <div class="flex gap-2">
+                        <input type="text" id="nameInput" placeholder="Name hinzufügen..." class="flex-1 bg-white/10 border border-white/20 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 ring-sky-400 text-white">
+                        <button onclick="addName()" class="btn-pixel px-4 py-2 rounded-lg font-bold">Add</button>
+                    </div>
+                    <div id="namesList" class="flex flex-wrap gap-2 text-xs min-h-[40px]">
+                        <!-- Namen erscheinen hier -->
+                    </div>
+                </div>
+            </div>
 
-      // --- Inlined App.tsx (converted to JS with React.createElement) ---
-      const App = () => {
-        const { useState, useEffect, useRef, useCallback } = React;
+            <!-- Rechte Seite: Themenrad -->
+            <div class="glass p-6 flex flex-col items-center">
+                <h2 class="text-2xl font-semibold mb-6 text-emerald-400">Thema</h2>
+                <div class="wheel-container mb-8">
+                    <div class="pointer"></div>
+                    <canvas id="topicsWheel" width="500" height="500"></canvas>
+                </div>
+                <div class="mt-4 p-4 bg-white/5 rounded-xl w-full">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-xs font-bold text-slate-500 uppercase">Themen-Pool (manuell entfernbar)</h3>
+                    </div>
+                    <ul id="topicPool" class="text-[10px] text-slate-400 grid grid-cols-2 gap-2">
+                        <!-- Themenliste -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
 
-        const [revealedElements, setRevealedElements] = useState(new Set());
-        const [timelineAnimatedOnce, setTimelineAnimatedOnce] = useState(false);
-        
-        const elementsToRevealRef = useRef(new Map());
-
-        const addToRefs = useCallback((id, el) => {
-          if (el) {
-            elementsToRevealRef.current.set(id, el);
-          } else {
-            elementsToRevealRef.current.delete(id);
-          }
-        }, []);
-        
-        useEffect(() => {
-          if (typeof window.Chart === 'undefined' || typeof window.ChartDataLabels === 'undefined') {
-              console.warn('Chart.js or ChartDataLabels not loaded');
-              return;
-          }
-          window.Chart.register(window.ChartDataLabels);
-          window.Chart.defaults.font.family = 'Google Sans';
-          window.Chart.defaults.font.size = 14;
-          if (window.Chart.defaults.plugins?.title?.font) {
-               window.Chart.defaults.plugins.title.font.family = 'Google Sans';
-          }
-
-          const currentElements = Array.from(elementsToRevealRef.current.values());
-          const observer = new IntersectionObserver(
-            (entries) => {
-              entries.forEach((entry) => {
-                const targetElement = entry.target; 
-                const id = targetElement.dataset.revealId;
-                if (entry.isIntersecting && id) {
-                  setRevealedElements((prev) => new Set(prev).add(id));
-                  
-                  if (targetElement.dataset.isTimeline === 'true' && !timelineAnimatedOnce) {
-                      setTimelineAnimatedOnce(true);
-                  }
-                  observer.unobserve(entry.target);
-                }
-              });
-            },
-            { threshold: 0.1 } 
-          );
-
-          currentElements.forEach((el) => {
-            if (el) observer.observe(el);
-          });
-
-          return () => {
-            currentElements.forEach((el) => {
-              if (el) observer.unobserve(el);
-            });
-          };
-        }, [timelineAnimatedOnce, addToRefs]); 
-
-        useEffect(() => {
-          if (timelineAnimatedOnce) {
-            const timelineItems = Array.from(elementsToRevealRef.current.values()).filter(
-              el => el?.dataset.isTimeline === 'true'
-            );
-            timelineItems.forEach((el, index) => {
-              if (el?.dataset.revealId) {
-                  const id = el.dataset.revealId;
-                  setTimeout(() => {
-                      setRevealedElements(prev => new Set(prev).add(id));
-                  }, index * 200); 
-              }
-            });
-          }
-        }, [timelineAnimatedOnce]);
-
-        const pixelGrowthChartRef = useRef(null);
-        useEffect(() => {
-          if (pixelGrowthChartRef.current && typeof window.Chart !== 'undefined') {
-            const ctx = pixelGrowthChartRef.current.getContext('2d');
-            if (!ctx) return;
-            const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height); 
-            gradient.addColorStop(0, 'rgba(226, 0, 116, 0.7)');
-            gradient.addColorStop(1, 'rgba(226, 0, 116, 0)');
-
-            const chartInstance = new window.Chart(ctx, {
-              type: 'line',
-              data: {
-                labels: ['2021', '2022', '2023', '2024'],
-                datasets: [{
-                  label: 'Unit Share %',
-                  data: [0.2, 0.9, 2.0, 3.6],
-                  backgroundColor: gradient,
-                  borderColor: '#E20074',
-                  borderWidth: 3,
-                  pointBackgroundColor: '#E20074',
-                  pointBorderColor: '#fff',
-                  pointHoverBackgroundColor: '#fff',
-                  pointHoverBorderColor: '#E20074',
-                  pointRadius: 6,
-                  pointHoverRadius: 8,
-                  fill: true,
-                  tension: 0.4
-                }]
-              },
-              options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: { display: false },
-                  title: {
-                    display: true,
-                    text: ["Google Pixel Market Share 🇦🇹", "(GFK >350€)"],
-                    font: { size: 16, weight: '500' }, 
-                    padding: { top: 10, bottom: 20 },
-                    color: '#333'
-                  },
-                  datalabels: {
-                    anchor: 'end',
-                    align: 'top',
-                    formatter: (value) => value + '%',
-                    font: { weight: 'bold', size: 14, family: 'Google Sans' }, 
-                    color: '#4A4A4A'
-                  }
-                },
-                scales: {
-                  y: { grid: { display: false }, ticks: { display: false } },
-                  x: { grid: { display: false }, ticks: { font: { size: 12, family: 'Google Sans' }, color: '#333' } } 
-                }
-              }
-            });
-            return () => chartInstance.destroy();
-          }
-        }, []);
-
-        const [selectedLeaderboardRank, setSelectedLeaderboardRank] = useState(null);
-        const leaderboardData = [
-            { rank: 1, brand: 'Apple', units: 674900, logo: CE("img", { src: "https://logo.clearbit.com/apple.com?size=32", alt: "Apple", className: "w-8 h-8 rounded" }) },
-            { rank: 2, brand: 'Samsung', units: 486000, logo: CE("img", { src: "https://logo.clearbit.com/samsung.com?size=32", alt: "Samsung", className: "w-8 h-8 rounded" }) },
-            { rank: 3, brand: 'Google', units: 45300, logo: CE(GoogleColorLogoIcon, { className: "w-8 h-8" }), isGoogle: true },
-            { rank: 4, brand: 'Xiaomi Group', units: 20326, logo: CE("img", { src: "https://logo.clearbit.com/mi.com?size=32", alt: "Xiaomi", className: "w-8 h-8 rounded" }) },
-            { rank: 5, brand: 'Vivo', units: 19500, logo: CE("img", { src: "https://logo.clearbit.com/vivo.com?size=32", alt: "Vivo", className: "w-8 h-8 rounded" }) }
-        ];
-
-        const getMedal = (rank, isGoogle) => {
-          const size = rank <= 3 ? 'text-3xl md:text-4xl' : 'text-lg md:text-xl';
-          if (rank === 1) return CE("span", { className: size }, "🥇");
-          if (rank === 2) return CE("span", { className: size }, "🥈");
-          if (rank === 3) {
-              return CE("div", { className: "flex items-center justify-center" },
-                  isGoogle && CE("span", { className: "text-green-500 text-xl md:text-2xl mr-1" }, "▲"),
-                  CE("span", { className: size }, "🥉")
-              );
-          }
-          return CE("span", { className: "font-bold text-gray-500 text-base md:text-lg" }, rank);
-        };
-
-        const competitorGrowthChartRef = useRef(null);
-        useEffect(() => {
-          if (competitorGrowthChartRef.current && typeof window.Chart !== 'undefined') {
-            const getVisibleDataBounds = (chart) => {
-              const visibleData = chart.data.datasets
-                  .filter((_, i) => !chart.getDatasetMeta(i).hidden)
-                  .flatMap((d) => d.data.filter((val) => typeof val === 'number')); 
-
-              if (visibleData.length === 0) return { max: 100, min: -25 }; 
-              
-              let maxValue = Math.max(...visibleData, 0); 
-              let minValue = Math.min(...visibleData, 0);
-              
-              if (maxValue === minValue) {
-                  maxValue = maxValue + 10; 
-                  minValue = minValue - 10; 
-              }
-              if (maxValue === 0 && minValue === 0 && visibleData.length > 0) { 
-                return { max: 10, min: -10};
-              }
-
-              const paddingFactor = 1.2; 
-              
-              let yMax = maxValue >= 0 ? maxValue * paddingFactor : maxValue / paddingFactor;
-              let yMin = minValue <= 0 ? minValue * paddingFactor : minValue / paddingFactor;
-
-              if (maxValue >= 0 && yMax < maxValue + 5) yMax = maxValue + 5;
-              if (maxValue < 0 && yMax > maxValue -5) yMax = maxValue -5;
-
-              if (minValue <= 0 && yMin > minValue - 5) yMin = minValue - 5;
-              if (minValue > 0 && yMin < minValue + 5) yMin = minValue + 5;
-              
-              if (yMax === 0 && maxValue === 0 && visibleData.some((v) => v === 0)) yMax = 10;
-              if (yMin === 0 && minValue === 0 && visibleData.some((v) => v === 0)) yMin = -10;
-
-              return { 
-                  max: Math.ceil(yMax / 5) * 5 , 
-                  min: Math.floor(yMin / 5) * 5 
-              };
-            };
+    <!-- Kombiniertes Winner Modal -->
+    <div id="winnerModal" class="fixed inset-0 modal-overlay flex items-center justify-center hidden z-50 p-4">
+        <div class="glass p-8 md:p-16 text-center max-w-2xl w-full border-2 border-white/20 animate-pop">
+            <div class="text-sky-400 text-sm font-bold uppercase tracking-widest mb-4">Das Ergebnis steht fest!</div>
             
-            const chartInstance = new window.Chart(competitorGrowthChartRef.current, {
-              type: 'bar',
-              data: {
-                  labels: ['Google Pixel', 'Apple', 'Samsung', 'Total Market'],
-                  datasets: [
-                  {
-                      label: "YoY Growth '22",
-                      data: [357.1, 2.8, 25.8, 11.4],
-                      backgroundColor: 'rgba(226, 0, 116, 0.2)',
-                      borderColor: 'rgba(226, 0, 116, 0.4)',
-                      borderWidth: 1,
-                      hidden: true
-                  },
-                  {
-                      label: "YoY Growth '23",
-                      data: [145.9, 6.8, 19.0, 11.5],
-                      backgroundColor: 'rgba(226, 0, 116, 0.5)',
-                      borderColor: 'rgba(226, 0, 116, 0.7)',
-                      borderWidth: 1,
-                      hidden: true 
-                  },
-                  {
-                      label: "YoY Growth '24",
-                      data: [62.5, -3.7, -21.5, -10.3],
-                      backgroundColor: 'rgba(226, 0, 116, 0.9)',
-                      borderColor: 'rgba(226, 0, 116, 1)',
-                      borderWidth: 1
-                  }]
-              },
-              options: {
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                      legend: {
-                          position: 'top',
-                          labels: { color: '#333', font: {size: 12} },
-                          onClick: (e, legendItem, legend) => {
-                              window.Chart.defaults.plugins.legend.onClick.call(legend, e, legendItem, legend);
-                              const { max, min } = getVisibleDataBounds(legend.chart);
-                              if (legend.chart.options.scales?.y) {
-                                  legend.chart.options.scales.y.max = max;
-                                  legend.chart.options.scales.y.min = min;
-                              }
-                              legend.chart.update();
-                          }
-                      },
-                      title: {
-                          display: true,
-                          text: ['Yearly Growth Rate Smartphones 🇦🇹', '(GFK >350€)'],
-                          font: { size: 16, weight: '500', family: 'Google Sans' },
-                          padding: { top: 10, bottom: 20 },
-                          color: '#333'
-                      },
-                      datalabels: {
-                          anchor: 'end',
-                          align: 'top', 
-                          offset: 6,    
-                          formatter: (value) => value.toFixed(1) + '%',
-                          font: { weight: 'bold', size: 14, family: 'Google Sans' },
-                          color: (context) => context.dataset.data[context.dataIndex] >= 0 ? 'green' : 'red'
-                      },
-                      tooltip: {
-                          callbacks: {
-                             label: function(context) {
-                                  const label = context.dataset.label || '';
-                                  const growth = context.parsed.y;
-                                  const absoluteUnits = {
-                                      '22': [11300, 656200, 520200, 1300000],
-                                      '23': [27900, 700700, 619300, 1400000],
-                                      '24': [45300, 674900, 486000, 1300000]
-                                  };
-                                  let yearKey;
-                                  if (label.includes("'22")) yearKey = '22';
-                                  else if (label.includes("'23")) yearKey = '23';
-                                  else yearKey = '24';
-                                  
-                                  const units = absoluteUnits[yearKey][context.dataIndex];
-                                  const formattedUnits = (units / 1000).toFixed(1) + 'k';
-
-                                  return `${label}: ${growth.toFixed(1)}% (${formattedUnits} units)`;
-                             }
-                          }
-                      }
-                  },
-                  scales: {
-                      y: { 
-                          grid: { 
-                              color: function(context) {
-                                  if (context.tick && context.tick.value === 0) {
-                                      return 'rgba(0, 0, 0, 0.15)'; 
-                                  }
-                                  return 'transparent'; 
-                              },
-                              drawBorder: false,
-                          },
-                          ticks: { 
-                              display: false, 
-                          },
-                      },
-                      x: { 
-                          grid: { display: false }, 
-                          ticks: { font: { family: 'Google Sans', size: 12 }, color: '#333' }
-                      }
-                  }
-              }
-            });
-            
-            if(chartInstance.options.scales?.y) {
-              chartInstance.options.scales.y.max = 100;
-              chartInstance.options.scales.y.min = -25; 
-            }
-            chartInstance.update();
-            
-            return () => chartInstance.destroy();
-          }
-        }, []);
-
-        const potentialChartRef = useRef(null);
-        useEffect(() => {
-          if (potentialChartRef.current && typeof window.Chart !== 'undefined') {
-            const chartInstance = new window.Chart(potentialChartRef.current, {
-              type: 'doughnut',
-              data: {
-                  labels: ['Covered Market', 'Untapped Potential (Magenta)'],
-                  datasets: [{
-                      data: [60, 40],
-                      backgroundColor: ['rgba(0,0,0,0.1)', '#E20074'],
-                      borderColor: ['#ffffff'],
-                      borderWidth: 4,
-                  }]
-              },
-              options: {
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  cutout: '70%',
-                  plugins: {
-                      legend: { display: false },
-                      tooltip: { enabled: false },
-                      datalabels: { display: false }
-                  }
-              }
-            });
-            
-            let pulseStep = 0;
-            const intervalId = setInterval(() => {
-                pulseStep += 0.05;
-                const value = 40 + Math.sin(pulseStep) * 5; 
-                if(chartInstance.data.datasets[0]){
-                  chartInstance.data.datasets[0].data[1] = value;
-                  chartInstance.data.datasets[0].data[0] = 100 - value;
-                }
-                chartInstance.update('none');
-            }, 70); 
-
-            return () => {
-              clearInterval(intervalId);
-              chartInstance.destroy();
-            }
-          }
-        }, []);
-
-        const [agreementType, setAgreementType] = useState('strategic');
-
-        const handleStrategicAgreementClick = () => {
-          setAgreementType('strategic');
-          if (typeof window.confetti !== 'undefined') {
-              const duration = 1.5 * 1000; 
-              const animationEnd = Date.now() + duration;
-              const defaults = { startVelocity: 25, spread: 360, ticks: 50, zIndex: 1000 };
-
-              function randomInRange(min, max) {
-                return Math.random() * (max - min) + min;
-              }
-
-              const interval = setInterval(function() {
-                const timeLeft = animationEnd - Date.now();
-                if (timeLeft <= 0) return clearInterval(interval);
+            <div class="space-y-8 my-8">
+                <div>
+                    <div class="text-slate-400 text-xs uppercase mb-1">Pitcher</div>
+                    <div id="winnerName" class="text-4xl md:text-6xl font-black text-white">Name</div>
+                </div>
                 
-                const particleCount = 40 * (timeLeft / duration);
-                window.confetti({...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
-                window.confetti({...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
-              }, 200); 
-          }
-        };
+                <div class="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+                
+                <div class="flex flex-col items-center">
+                    <div class="text-slate-400 text-xs uppercase mb-1">Thema</div>
+                    <div class="flex items-center justify-center gap-3">
+                        <span id="jokerIconLeft" class="text-4xl md:text-6xl hidden joker-animation">🤡</span>
+                        <div id="winnerTopic" class="text-3xl md:text-5xl font-bold text-emerald-400 italic">Thema</div>
+                        <span id="jokerIconRight" class="text-4xl md:text-6xl hidden joker-animation">🤡</span>
+                    </div>
+                    <div id="jokerSubtext" class="text-sm text-amber-400 mt-2 hidden font-bold tracking-widest uppercase">Freie Themenwahl!</div>
+                </div>
+            </div>
 
-        const getRevealClasses = (id, isTimelineItem = false, isRight) => {
-          const baseTransition = `transition-all duration-700 ease-out`;
-          let initialTransform = 'opacity-0 translate-y-8'; 
-          if (isTimelineItem) {
-              initialTransform = isRight ? 'opacity-0 translate-x-12' : 'opacity-0 -translate-x-12';
-          }
-          
-          const isVisible = revealedElements.has(id);
-          return `${baseTransition} ${isVisible ? 'opacity-100 translate-y-0 translate-x-0' : initialTransform}`;
-        };
-        
-        const timelineItemIds = ['timeline-2022', 'timeline-2023', 'timeline-2024'];
+            <div id="statusMsg" class="text-xs text-slate-500 mb-6">Wird in Google Sheets gespeichert...</div>
 
-        const commitmentItems = [
-          { id: 'commit-1', Icon: (props) => CE("svg", {...props, xmlns:"http://www.w3.org/2000/svg", fill:"none", viewBox:"0 0 24 24", strokeWidth:"1.5", stroke:"currentColor"}, CE("path", {strokeLinecap:"round", strokeLinejoin:"round", d:"M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" })), title: "Co-Marketing Campaigns", desc: "Quarterly joint initiatives (ATL/BTL) to position Pixel as a hero portfolio within Magenta & matching investments." },
-          { id: 'commit-2', Icon: (props) => CE("svg", {...props, xmlns:"http://www.w3.org/2000/svg", fill:"none", viewBox:"0 0 24 24", strokeWidth:"1.5", stroke:"currentColor"}, CE("path", {strokeLinecap:"round", strokeLinejoin:"round", d:"M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h7.5" })), title: "Enhanced POS Visibility", desc: "Strategic placement and engaging displays for Pixel in key Magenta stores on par with competitors with co-funding of NCUs." },
-          { id: 'commit-3', Icon: (props) => CE("svg", {...props, xmlns:"http://www.w3.org/2000/svg", fill:"none", viewBox:"0 0 24 24", strokeWidth:"1.5", stroke:"currentColor"}, CE("path", {strokeLinecap:"round", strokeLinejoin:"round", d:"M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25A2.25 2.25 0 015.25 3h13.5A2.25 2.25 0 0121 5.25z" })), title: "Digital Marketing", desc: "Joint performance marketing to boost traffic to stores and online, with dedicated landing pages." },
-          { id: 'commit-4', Icon: (props) => CE("svg", {...props, xmlns:"http://www.w3.org/2000/svg", fill:"none", viewBox:"0 0 24 24", strokeWidth:"1.5", stroke:"currentColor"}, CE("path", {strokeLinecap:"round", strokeLinejoin:"round", d:"M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" })), title: "Salesforce Empowerment", desc: "Ongoing access for training & merchandising, plus performance incentives for shop & call center staff." },
-          { id: 'commit-5', Icon: (props) => CE("svg", {...props, xmlns:"http://www.w3.org/2000/svg", fill:"none", viewBox:"0 0 24 24", strokeWidth:"1.5", stroke:"currentColor"}, CE("path", {strokeLinecap:"round", strokeLinejoin:"round", d:"M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" })), title: "Targeted CRM", desc: "Continuous execution of targeted CRM campaigns to Magenta's customer base to drive upgrades and acquisition." },
-          { id: 'commit-6', Icon: (props) => CE("svg", {...props, xmlns:"http://www.w3.org/2000/svg", fill:"none", viewBox:"0 0 24 24", strokeWidth:"1.5", stroke:"currentColor"}, CE("path", {strokeLinecap:"round", strokeLinejoin:"round", d:"M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" })), title: "Employee Enthusiasm", desc: "Drive internal adoption and passion via Employee Purchase Programs and sponsoring sales events." }
+            <button onclick="closeModal()" class="btn-pixel px-12 py-4 rounded-xl font-bold text-lg">Verstanden</button>
+        </div>
+    </div>
+
+    <script>
+        // --- KONFIGURATION ---
+        const scriptURL = ""; 
+
+        let names = [];
+        let topics = [
+            "Beste Kamera", "Pixel und Gemini", "Design", "Sicherheit", 
+            "Familien-Funktionen", "Pixel Drops", "Android auf Pixel", 
+            "10 Pro Fold", "Pixel Snap", "Pixel Watch", "Pixel Buds", 
+            "Tensor G5", "Pixel Display", "Joker"
         ];
-        const [selectedCommitmentCards, setSelectedCommitmentCards] = useState(new Set());
+        
+        const colors = ['#38bdf8', '#818cf8', '#c084fc', '#fb7185', '#fb923c', '#facc15', '#4ade80', '#2dd4bf'];
 
-        const toggleCommitmentCard = (cardId) => {
-          setSelectedCommitmentCards(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(cardId)) {
-              newSet.delete(cardId);
-            } else {
-              newSet.add(cardId);
+        let namesAngle = 0;
+        let topicsAngle = 0;
+        let isSpinning = false;
+
+        function init() {
+            updateNamesList();
+            drawWheel('namesWheel', names, "Namen eintragen!");
+            drawWheel('topicsWheel', topics);
+            renderTopicList();
+        }
+
+        function drawWheel(canvasId, items, emptyText = "Leer") {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = canvas.width / 2 - 10;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (items.length === 0) {
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+                ctx.fillStyle = 'rgba(255,255,255,0.05)';
+                ctx.fill();
+                ctx.fillStyle = '#64748b';
+                ctx.font = 'italic 20px Inter';
+                ctx.textAlign = 'center';
+                ctx.fillText(emptyText, centerX, centerY);
+                return;
             }
-            return newSet;
-          });
-        };
 
-        const getProgressBarColor = (selectedCount, totalCount) => {
-          if (totalCount === 0 || selectedCount === 0) return 'bg-transparent'; 
-          const percentage = (selectedCount / totalCount) * 100;
-          if (percentage === 100) return 'bg-green-500';
-          if (percentage < 50) return 'bg-red-500';
-          return 'bg-orange-500';
-        };
+            const arcSize = (2 * Math.PI) / items.length;
 
-        return CE("div", { className: "flex flex-col min-h-screen" }, 
-          CE("header", { className: "bg-[#E20074] text-white shadow-lg relative overflow-hidden w-full" },
-            CE("img", { 
-                src: "https://www.dropbox.com/scl/fi/ohsyhtn363jin2r8hldwz/telekom-logo.png?rlkey=76rq07zbrkm3n57t35g4cct4c&st=5ie8ifb7&dl=1",
-                alt: "Telekom Logo",
-                ref: el => addToRefs('logo-telekom', el),
-                "data-reveal-id": "logo-telekom",
-                className: `absolute left-4 md:left-8 top-1/2 -translate-y-1/2 h-10 md:h-14 lg:h-16 xl:h-20 w-auto ${getRevealClasses('logo-telekom')}`
-            }),
-            CE("img", { 
-                src: "https://www.dropbox.com/scl/fi/8s5x1sr7shje8gqt6y2w6/google-logo.png?rlkey=t1k0dvnjre2hbher9kw2h2hdi&st=0vc3rhsw&dl=1",
-                alt: "Google Logo",
-                ref: el => addToRefs('logo-google', el),
-                "data-reveal-id": "logo-google",
-                className: `absolute right-4 md:right-8 top-1/2 -translate-y-1/2 h-10 md:h-14 lg:h-16 xl:h-20 w-auto ${getRevealClasses('logo-google')}`
-            }),
-            CE("div", { className: "container mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-5 md:py-6 lg:py-8 xl:py-10 text-center relative z-10 min-h-[15vh] flex flex-col items-center justify-center" },
-                CE("h1", { 
-                    ref: el => addToRefs('hero-h1', el),
-                    "data-reveal-id": "hero-h1",
-                    className: `text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold mb-4 ${getRevealClasses('hero-h1')}`
-                }, "Magenta & Google Pixel"),
-                CE("h2", { 
-                    ref: el => addToRefs('hero-h2', el),
-                    "data-reveal-id": "hero-h2",
-                    style: { transitionDelay: revealedElements.has('hero-h1') ? '150ms': '0ms'}, 
-                    className: `text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl ${getRevealClasses('hero-h2')}`
-                }, "A Partnership for Growth")
-            ),
-            CE("div", { className: "absolute top-0 left-0 w-full h-full z-0" },
-                CE("div", { className: "absolute -bottom-1/4 -left-1/4 w-1/2 h-1/2 bg-white/10 rounded-full animate-pulse" }),
-                CE("div", { className: "absolute -top-1/4 -right-1/4 w-2/3 h-2/3 bg-white/5 rounded-full animate-pulse", style: {animationDelay: '1s'} })
-            )
-          ),
-          CE("main", { className: "flex-grow container mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-12 md:py-16 xl:py-20 w-full" },
-            CE("section", { 
-                id: "opportunity", 
-                ref: el => addToRefs('opportunity-section', el),
-                "data-reveal-id": "opportunity-section",
-                className: `mb-16 md:mb-24 xl:mb-32 ${getRevealClasses('opportunity-section')}`
-            },
-              CE("h2", { className: "text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-center mb-12" }, "Google Pixel in Austria: A Story of Growth & Opportunity"),
-              CE("div", { className: "grid md:grid-cols-2 gap-8 lg:gap-12 items-center" },
-                CE("div", { className: "order-2 md:order-1" },
-                  CE("h3", { className: "text-2xl lg:text-3xl font-semibold mb-6 text-[#E20074]" }, "Leading the Premium Charge"),
-                  CE("ul", { className: "list-none space-y-3 sm:space-y-4 text-base lg:text-lg xl:text-xl" },
-                    [
-                        "The premium segment is the primary driver of market value.",
-                        "Pixel is the undisputed growth engine in this critical space.",
-                        "Our explosive growth signals a powerful shift in consumer preference.",
-                        "Partnering with Pixel means capturing this momentum to attract and retain high-value customers for Magenta."
-                    ].map((item, index) => CE("li", { key: index, className: "flex items-start" },
-                        CE("span", { className: "font-bold text-[#E20074] mr-2 text-xl mt-0.5" }, ">"),
-                        CE("span", null, item)
-                    ))
-                  )
-                ),
-                CE("div", { className: "order-1 md:order-2 h-80 sm:h-96 md:h-[28rem] lg:h-[32rem]" }, 
-                    CE("div", { className: "bg-white p-3 sm:p-4 md:p-6 rounded-lg shadow-xl h-full" },
-                        CE("canvas", { ref: pixelGrowthChartRef })
-                    )
-                )
-              )
-            ),
-            CE("section", { id: "timeline", className: "mb-16 md:mb-24 xl:mb-32" },
-                CE("h2", { 
-                    ref: el => addToRefs('timeline-title', el), 
-                    "data-reveal-id": "timeline-title",
-                    className: `text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-center mb-4 ${getRevealClasses('timeline-title')}`
-                }, "Partner Expansions fueling Pixel Growth"),
-                CE("p", { 
-                    ref: el => addToRefs('timeline-desc', el),
-                    "data-reveal-id": "timeline-desc",
-                    style: { transitionDelay: revealedElements.has('timeline-title') ? '150ms': '0ms'},
-                    className: `text-center max-w-4xl mx-auto mb-12 text-base lg:text-lg xl:text-xl text-gray-700 ${getRevealClasses('timeline-desc')}`
-                }, "Our growth has been achieved through focused partnerships, demonstrating strong consumer pull even with limited channel availability."),
-                CE("div", {className: "relative max-w-2xl mx-auto"},
-                    CE("div", {className: "absolute left-1/2 top-0 h-full w-0.5 bg-gray-300 rounded-full"}),
-                    CE("div", { ref: el => addToRefs(timelineItemIds[0], el), "data-reveal-id": timelineItemIds[0], "data-is-timeline": "true", className: `relative mb-10 md:mb-12 ${getRevealClasses(timelineItemIds[0], true, false)}`},
-                        CE("div", {className: "flex items-center"},
-                            CE("div", {className: "w-1/2"}),
-                            CE("div", {className: "absolute left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-[#E20074] z-10 flex items-center justify-center ring-8 ring-gray-50 shadow"}),
-                            CE("div", {className: "w-1/2 pl-8 md:pl-10"},
-                                CE("div", {className: "p-4 bg-white rounded-lg shadow-md border-l-4 border-[#E20074] transition-all duration-300 ease-in-out hover:bg-amber-50 hover:shadow-lg hover:border-[#c0005e]"},
-                                    CE("h3", {className: "font-bold text-xl md:text-2xl text-gray-800 mb-1"}, "2022"),
-                                    CE("p", {className: "text-gray-600 text-sm md:text-base"}, "Amazon")
-                                )
-                            )
-                        )
-                    ),
-                     CE("div", { ref: el => addToRefs(timelineItemIds[1], el), "data-reveal-id": timelineItemIds[1], "data-is-timeline": "true", className: `relative mb-10 md:mb-12 ${getRevealClasses(timelineItemIds[1], true, true)}`},
-                        CE("div", {className: "flex flex-row-reverse items-center"},
-                            CE("div", {className: "w-1/2"}),
-                            CE("div", {className: "absolute left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-[#E20074] z-10 flex items-center justify-center ring-8 ring-gray-50 shadow"}),
-                            CE("div", {className: "w-1/2 pr-8 md:pr-10"},
-                                CE("div", {className: "p-4 bg-white rounded-lg shadow-md border-r-4 border-[#E20074] text-right transition-all duration-300 ease-in-out hover:bg-amber-50 hover:shadow-lg hover:border-[#c0005e]"},
-                                    CE("h3", {className: "font-bold text-xl md:text-2xl text-gray-800 mb-1"}, "2023"),
-                                    CE("p", {className: "text-gray-600 text-sm md:text-base"}, "MediaMarkt"),
-                                    CE("p", {className: "text-gray-600 text-sm md:text-base"}, "Hutchison Three"),
-                                    CE("p", {className: "text-gray-600 text-sm md:text-base"}, "Google Store")
-                                )
-                            )
-                        )
-                    ),
-                     CE("div", { ref: el => addToRefs(timelineItemIds[2], el), "data-reveal-id": timelineItemIds[2], "data-is-timeline": "true", className: `relative mb-10 md:mb-12 ${getRevealClasses(timelineItemIds[2], true, false)}`},
-                        CE("div", {className: "flex items-center"},
-                            CE("div", {className: "w-1/2"}),
-                            CE("div", {className: "absolute left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-[#E20074] z-10 flex items-center justify-center ring-8 ring-gray-50 shadow"}),
-                            CE("div", {className: "w-1/2 pl-8 md:pl-10"},
-                                CE("div", {className: "p-4 bg-white rounded-lg shadow-md border-l-4 border-[#E20074] transition-all duration-300 ease-in-out hover:bg-amber-50 hover:shadow-lg hover:border-[#c0005e]"},
-                                    CE("h3", {className: "font-bold text-xl md:text-2xl text-gray-800 mb-1"}, "2024"),
-                                    CE("p", {className: "text-gray-600 text-sm md:text-base"}, "A1 Telekom")
-                                )
-                            )
-                        )
-                    )
-                )
-            ),
-            CE("section", {id: "competitor-comparison", ref: el => addToRefs('competitor-section', el), "data-reveal-id": "competitor-section", className: `mb-16 md:mb-24 xl:mb-32 ${getRevealClasses('competitor-section')}`},
-                CE("h2", {className: "text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-center mb-4"}, "Outpacing the Competition"),
-                CE("p", {className: "text-center max-w-4xl mx-auto mb-10 text-base lg:text-lg xl:text-xl text-gray-700"}, "Pixel isn't just growing; we are gaining significant ground while market leaders are stagnant or declining. This trend presents a clear opportunity to challenge the status quo together."),
-                CE("div", {className: "bg-white p-3 sm:p-4 md:p-6 rounded-lg shadow-xl max-w-5xl mx-auto h-72 sm:h-80 md:h-96 lg:h-[30rem]"},
-                    CE("canvas", {ref: competitorGrowthChartRef})
-                )
-            ),
-            CE("section", {id: "leaderboard", ref: el => addToRefs('leaderboard-section', el), "data-reveal-id": "leaderboard-section", className: `mb-16 md:mb-24 xl:mb-32 ${getRevealClasses('leaderboard-section')}`},
-                CE("h2", {className: "text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-center mb-4"}, "The Premium Smartphone Brand Leaderboard 2024 🇦🇹"),
-                CE("p", {className: "text-center max-w-4xl mx-auto mb-10 text-base lg:text-lg xl:text-xl text-gray-700"}, "In the competitive >€350 segment, Google Pixel has firmly established itself as the #3 most relevant brand in Austria by sales volume, right behind the two market leaders."),
-                CE("div", {className: "max-w-3xl mx-auto bg-white p-4 sm:p-6 rounded-lg shadow-xl"},
-                    CE("ol", {className: "space-y-3"},
-                        leaderboardData.map((player) => 
-                            CE("li", {
-                                key: player.rank,
-                                onClick: () => setSelectedLeaderboardRank(player.rank === selectedLeaderboardRank ? null : player.rank),
-                                className: `p-3 sm:p-4 rounded-lg cursor-pointer border-2 hover:border-[#E20074] transition-all duration-300 ease-in-out hover:bg-amber-50 hover:shadow-lg ${selectedLeaderboardRank === player.rank ? 'bg-[#E20074]/10 scale-102 border-[#E20074]' : 'border-transparent hover:border-opacity-50'}`,
-                                "aria-expanded": selectedLeaderboardRank === player.rank,
-                                role: "button",
-                                tabIndex: 0,
-                                onKeyDown: (e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedLeaderboardRank(player.rank === selectedLeaderboardRank ? null : player.rank)}
-                            },
-                                CE("div", {className: "flex items-center space-x-3 sm:space-x-4"},
-                                    CE("div", {className: "w-12 sm:w-16 text-center font-bold text-gray-700 flex items-center justify-center"}, getMedal(player.rank, player.isGoogle)),
-                                    CE("div", {className: "w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 p-1 shadow-sm"}, player.logo),
-                                    CE("span", {className: "flex-grow text-gray-800 text-lg sm:text-xl font-semibold"}, player.brand),
-                                    CE("svg", {className: `w-5 h-5 text-gray-500 transform transition-transform duration-300 ${selectedLeaderboardRank === player.rank ? 'rotate-180' : ''}`, fill: "none", stroke: "currentColor", viewBox: "0 0 24 24"}, 
-                                        CE("path", {strokeLinecap:"round", strokeLinejoin:"round", strokeWidth:"2", d:"M19 9l-7 7-7-7"})
-                                    )
-                                ),
-                                CE("div", {className: `text-center text-[#E20074] font-bold text-base sm:text-lg overflow-hidden transition-all duration-300 ease-in-out ${selectedLeaderboardRank === player.rank ? 'max-h-20 opacity-100 mt-2 sm:mt-3' : 'max-h-0 opacity-0'}`},
-                                    CE("p", null, new Intl.NumberFormat('de-DE').format(player.units) + " Units Sold")
-                                )
-                            )
-                        )
-                    )
-                )
-            ),
-            CE("section", {id: "untapped-potential", ref: el => addToRefs('untapped-section', el), "data-reveal-id": "untapped-section", className: `mb-16 md:mb-24 xl:mb-32 ${getRevealClasses('untapped-section')}`},
-                CE("h2", {className: "text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-center mb-4"}, "The Untapped Potential"),
-                CE("p", {className: "text-center max-w-4xl mx-auto mb-10 text-base lg:text-lg xl:text-xl text-gray-700"}, "Our growth story is strong, but a significant portion of the premium market remains untapped. This is where our partnership with Magenta becomes a game-changer."),
-                CE("div", {className: "max-w-xs sm:max-w-sm md:max-w-md mx-auto bg-white p-4 sm:p-6 rounded-lg shadow-xl h-64 sm:h-72 md:h-80"},
-                    CE("canvas", {ref: potentialChartRef})
-                ),
-                CE("div", {className: "mt-8 text-center p-6 bg-[#E20074]/10 rounded-lg max-w-4xl mx-auto shadow"},
-                    CE("h3", {className: "text-xl lg:text-2xl font-bold text-[#E20074] mb-2"}, "Imagine the Possibilities"),
-                    CE("p", {className: "text-gray-700 text-lg lg:text-xl"}, "By combining Pixel's momentum with Magenta's network and retail excellence, we can capture this significant untapped potential and redefine the premium market in Austria together.")
-                )
-            ),
-            CE("section", {id: "why-pixel", ref: el => addToRefs('why-pixel-section', el), "data-reveal-id": "why-pixel-section", className: `my-16 md:my-24 xl:my-32 ${getRevealClasses('why-pixel-section')}`},
-                CE("h2", {className: "text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-center mb-4"}, "Stronger Together: A Win-Win Partnership"),
-                CE("p", {className: "text-center max-w-4xl mx-auto mb-12 text-base lg:text-lg xl:text-xl text-gray-700"}, "The partnership between Google and Magenta creates significant advantages for both sides and lays the foundation for sustainable success."),
-                CE("div", {className: "flex justify-center mb-8 bg-gray-200 rounded-full p-1 max-w-sm sm:max-w-md md:max-w-lg mx-auto shadow-inner"},
-                    CE("button", {onClick: handleStrategicAgreementClick, className: `flex-1 py-2 sm:py-2.5 px-3 sm:px-6 rounded-full font-medium transition-all duration-300 border-2 text-xs sm:text-sm md:text-base whitespace-nowrap ${agreementType === 'strategic' ? 'bg-white text-[#E20074] border-[#E20074] shadow-md' : 'text-gray-600 hover:bg-gray-300/70 border-transparent'}`, "aria-pressed": agreementType === 'strategic'}, "Strategic Partnership"),
-                    CE("button", {onClick: () => setAgreementType('launch'), className: `flex-1 py-2 sm:py-2.5 px-3 sm:px-6 rounded-full font-medium transition-all duration-300 border-2 text-xs sm:text-sm md:text-base whitespace-nowrap ${agreementType === 'launch' ? 'bg-white text-[#E20074] border-[#E20074] shadow-md' : 'text-gray-600 hover:bg-gray-300/70 border-transparent'}`, "aria-pressed": agreementType === 'launch'}, "Launch 2025 Agreement")
-                ),
-                CE("div", {className: `grid md:grid-cols-2 gap-8 lg:gap-12 max-w-6xl xl:max-w-7xl mx-auto ${agreementType === 'launch' ? 'opacity-50' : ''} transition-opacity duration-300`},
-                    CE("div", {className: `bg-white p-6 md:p-8 rounded-lg shadow-xl border-t-4 border-[#E20074] ${agreementType === 'launch' ? 'line-through decoration-red-500 decoration-2' : ''} transition-all duration-300`},
-                        CE("h3", {className: "text-xl md:text-2xl font-bold text-[#E20074] mb-6"}, "What's in it for Magenta?"),
-                        CE("ul", {className: "space-y-3"},
-                            [
-                                { title: "Acquire Premium Customers", desc: "Increase ARPU and customer loyalty by focusing on the high-value segment." },
-                                { title: "Strengthen Brand Image", desc: "Association with Google's AI innovation positions Magenta as a forward-thinking provider." },
-                                { title: "Drive In-Store Traffic & NPS", desc: "Showcase unique AI experiences that draw customers into your stores for live demos." },
-                                { title: "Rebalance OS Portfolio", desc: "Reduce OEM dependencies by growing Android Share with Pixel." }
-                            ].map(item => 
-                                CE("li", {key: item.title, className: "flex items-start p-2 sm:p-3 rounded-lg transition-all duration-300 ease-in-out hover:bg-amber-50 hover:scale-[1.02]"},
-                                    CE("svg", {className: "w-5 h-5 sm:w-6 sm:h-6 text-green-500 mr-2 sm:mr-3 flex-shrink-0 mt-1", fill: "currentColor", viewBox: "0 0 20 20"}, CE("path", {fillRule:"evenodd", d:"M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z", clipRule:"evenodd"})),
-                                    CE("div", null, 
-                                        CE("h4", {className: "font-semibold text-base sm:text-lg"}, item.title),
-                                        CE("p", {className: "text-gray-600 text-sm sm:text-base"}, item.desc)
-                                    )
-                                )
-                            )
-                        )
-                    ),
-                     CE("div", {className: `bg-white p-6 md:p-8 rounded-lg shadow-xl border-t-4 border-blue-500 ${agreementType === 'launch' ? 'line-through decoration-red-500 decoration-2' : ''} transition-all duration-300`},
-                        CE("h3", {className: "text-xl md:text-2xl font-bold text-gray-700 mb-6"}, "What's in it for Google?"),
-                        CE("ul", {className: "space-y-3"},
-                            [
-                                { title: "Market Expansion", desc: "Partnering with a leading carrier like Magenta enables accelerated growth in Austria." },
-                                { title: "Build Brand Awareness", desc: "A strong presence in Magenta's channels is crucial for building the brand." },
-                                { title: "Austrian \"Success Story\"", desc: "Create a best-practice model within the DT group, driving synergies across the established network." },
-                                { title: "Unlock B2B Channels", desc: "Access Magenta’s robust business and enterprise channels for high-volume corporate sales." }
-                            ].map(item => 
-                                CE("li", {key: item.title, className: "flex items-start p-2 sm:p-3 rounded-lg transition-all duration-300 ease-in-out hover:bg-amber-50 hover:scale-[1.02]"},
-                                    CE("svg", {className: "w-5 h-5 sm:w-6 sm:h-6 text-green-500 mr-2 sm:mr-3 flex-shrink-0 mt-1", fill: "currentColor", viewBox: "0 0 20 20"}, CE("path", {fillRule:"evenodd", d:"M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z", clipRule:"evenodd"})),
-                                    CE("div", null, 
-                                        CE("h4", {className: "font-semibold text-base sm:text-lg"}, item.title),
-                                        CE("p", {className: "text-gray-600 text-sm sm:text-base"}, item.desc)
-                                    )
-                                )
-                            )
-                        )
-                    )
-                )
-            ),
-            CE("section", {id: "commitment", ref: el => addToRefs('commitment-section', el), "data-reveal-id": "commitment-section", className: `mb-16 md:mb-24 xl:mb-32 ${getRevealClasses('commitment-section')}`},
-                CE("h2", {className: "text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-center mb-10 lg:mb-12"}, "Joint Go-To-Market Approach for a Shared Success"),
-                CE("div", {className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"},
-                    commitmentItems.map((item, index) => 
-                        CE("div", {
-                            key: item.id,
-                            ref: el => addToRefs(item.id, el),
-                            "data-reveal-id": item.id,
-                            style: { transitionDelay: revealedElements.has('commitment-section') ? `${index * 100}ms`: '0ms'},
-                            className: `relative bg-white p-6 rounded-lg shadow-lg text-center transition-all duration-300 ease-in-out hover:bg-amber-50 hover:-translate-y-1.5 hover:shadow-xl cursor-pointer ${getRevealClasses(item.id)} ${selectedCommitmentCards.has(item.id) ? 'ring-2 ring-offset-2 ring-green-500' : ''}`,
-                            onClick: () => toggleCommitmentCard(item.id),
-                            role: "checkbox",
-                            "aria-checked": selectedCommitmentCards.has(item.id),
-                            tabIndex: 0,
-                            onKeyDown: (e) => { if (e.key === 'Enter' || e.key === ' ') toggleCommitmentCard(item.id)}
-                        },
-                            selectedCommitmentCards.has(item.id) && CE("div", {className: "absolute top-2 left-2 bg-white rounded-full p-0.5 shadow-md"},
-                                CE("svg", {xmlns:"http://www.w3.org/2000/svg", viewBox:"0 0 20 20", fill:"currentColor", className:"w-5 h-5 text-green-500"},
-                                    CE("path", {fillRule:"evenodd", d:"M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z", clipRule:"evenodd"})
-                                )
-                            ),
-                            CE(item.Icon, {className: "w-10 h-10 lg:w-12 lg:h-12 text-[#E20074] mx-auto mb-4"}),
-                            CE("h3", {className: "text-md lg:text-lg font-semibold mb-2"}, item.title),
-                            CE("p", {className: "text-gray-600 text-sm"}, item.desc)
-                        )
-                    )
-                ),
-                CE("div", {className: "mt-10 max-w-2xl mx-auto px-4"},
-                    CE("div", {className: "flex justify-between items-center mb-1 text-sm font-medium text-gray-700"},
-                        CE("span", null, "Strategic Partnership Progress"),
-                        CE("span", null, `${selectedCommitmentCards.size} / ${commitmentItems.length}`)
-                    ),
-                    CE("div", {className: "h-4 w-full bg-gray-300 rounded-full overflow-hidden shadow-inner", role:"progressbar", "aria-valuenow":selectedCommitmentCards.size, "aria-valuemin":"0", "aria-valuemax":commitmentItems.length},
-                        CE("div", {
-                            className: `h-full rounded-full transition-all duration-700 ease-out text-center text-white text-xs flex items-center justify-center ${getProgressBarColor(selectedCommitmentCards.size, commitmentItems.length)}`,
-                            style: { width: `${(selectedCommitmentCards.size / commitmentItems.length) * 100}%` }
-                        })
-                    )
-                )
-            ),
-            CE("section", {ref: el => addToRefs('true-partnership-section', el), "data-reveal-id": "true-partnership-section", className: `mb-16 md:mb-24 xl:mb-32 grid md:grid-cols-2 gap-8 md:gap-12 items-center ${getRevealClasses('true-partnership-section')}`},
-                CE("div", {className: "p-6 md:p-8 bg-white rounded-lg shadow-xl transition-all duration-300 ease-in-out hover:bg-amber-50 hover:-translate-y-1 hover:shadow-2xl"},
-                    CE("h3", {className: "text-xl md:text-2xl lg:text-3xl font-bold mb-4 text-[#E20074]"}, "This is a True Partnership"),
-                    CE("ul", {className: "space-y-3 md:space-y-4 text-sm md:text-base lg:text-lg"},
-                        CE("li", {className: "flex items-start"}, CE("span", {className: "font-bold text-[#E20074] mr-2 md:mr-3 text-lg md:text-xl"}, "✓"), CE("span", null, CE("strong", null, "C-Level Alignment:"), " Regular strategic check-ins to ensure our goals remain perfectly synchronized.")),
-                        CE("li", {className: "flex items-start"}, CE("span", {className: "font-bold text-[#E20074] mr-2 md:mr-3 text-lg md:text-xl"}, "✓"), CE("span", null, CE("strong", null, "Joint Business Planning:"), " A shared roadmap with clear KPIs to track our mutual success.")),
-                        CE("li", {className: "flex items-start"}, CE("span", {className: "font-bold text-[#E20074] mr-2 md:mr-3 text-lg md:text-xl"}, "✓"), CE("span", null, CE("strong", null, "Data & Insights Sharing:"), " Transparently leveraging data to identify opportunities and optimize performance."))
-                    )
-                ),
-                CE("div", {className: "p-6 md:p-8 transition-all duration-300 ease-in-out hover:bg-gray-50/50 hover:-translate-y-1 hover:shadow-xl rounded-lg"},
-                    CE("h2", {className: "text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4"}, "Stronger, Together."),
-                    CE("p", {className: "text-base md:text-lg lg:text-xl xl:text-2xl text-gray-700"}, "We see this as more than just a supplier-carrier relationship. It's a commitment to merge our strengths, innovate together, and redefine what's possible in the Austrian telecom market. By combining Magenta's network excellence with Google's innovation, we will create unmatched value for customers and unprecedented growth for our businesses.")
-                )
-            ),
-            CE("section", {id: "proposal", ref: el => addToRefs('proposal-section', el), "data-reveal-id": "proposal-section", className: `bg-[#E20074] text-white py-12 md:py-16 lg:py-20 px-4 sm:px-6 rounded-lg shadow-2xl relative overflow-hidden ${getRevealClasses('proposal-section')}`},
-                CE("img", {src:"https://www.dropbox.com/scl/fi/ohsyhtn363jin2r8hldwz/telekom-logo.png?rlkey=76rq07zbrkm3n57t35g4cct4c&st=5ie8ifb7&dl=1", alt:"Telekom Logo", className:"absolute left-2 md:left-4 lg:left-8 top-1/2 -translate-y-1/2 h-10 md:h-16 lg:h-20 xl:h-24 w-auto opacity-80 md:opacity-90"}),
-                CE("img", {src:"https://www.dropbox.com/scl/fi/8s5x1sr7shje8gqt6y2w6/google-logo.png?rlkey=t1k0dvnjre2hbher9kw2h2hdi&st=0vc3rhsw&dl=1", alt:"Google Logo", className:"absolute right-2 md:right-4 lg:right-8 top-1/2 -translate-y-1/2 h-10 md:h-16 lg:h-20 xl:h-24 w-auto opacity-80 md:opacity-90"}),
-                CE("div", {className: "text-center max-w-4xl mx-auto relative z-10"},
-                    CE("h2", {className: "text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6"}, "Our Shared Ambition"),
-                    CE("p", {className: "text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl mb-6 sm:mb-8"}, "Let's forge a ", CE("strong", {className: "font-semibold text-white"}, "C-Level agreement"), " with regular strategic check-ins, committing to a joint plan to achieve ", CE("strong", {className: "font-semibold text-white"}, "15% Premium IHS and beyond"), " by the end of 2027."),
-                    CE("a", {href:"https://serve-dot-zipline.appspot.com/asset/0798221d-6bf7-51cf-bcf0-67afaf71aad2/zpc/b77e826by2w/", className:"inline-block bg-white text-[#E20074] font-bold py-3 px-6 sm:py-4 sm:px-10 rounded-full hover:bg-gray-200 transition duration-300 text-base sm:text-lg md:text-xl transform hover:scale-105 shadow-lg"}, "Let's Build the Future Together")
-                )
-            )
-          ),
-          CE("footer", { className: "bg-gray-800 text-white py-6 mt-12 w-full" },
-            CE("div", { className: "container mx-auto px-4 sm:px-6 lg:px-8 text-center" },
-                CE("p", { className: "text-sm" }, `© ${new Date().getFullYear()} Adnan Shah. All Rights Reserved.`)
-            )
-          )
-        );
-      };
+            items.forEach((item, i) => {
+                const angle = i * arcSize;
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, angle, angle + arcSize);
+                
+                if (item === "Joker") {
+                    ctx.fillStyle = "#f59e0b"; // Gold für Joker
+                } else {
+                    ctx.fillStyle = colors[i % colors.length];
+                }
+                
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(15, 23, 42, 0.4)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
 
-      const rootElement = document.getElementById('root');
-      if (!rootElement) {
-        throw new Error("Could not find root element to mount to");
-      }
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(angle + arcSize / 2);
+                
+                ctx.textAlign = "right";
+                ctx.fillStyle = "#fff";
+                
+                if (item === "Joker") {
+                    // Joker mit Text und Icon
+                    ctx.font = "bold 16px Inter";
+                    ctx.fillText("🤡 Joker", radius - 15, 6);
+                } else {
+                    ctx.font = "bold 15px Inter";
+                    ctx.fillText(item.length > 18 ? item.substring(0, 15) + "..." : item, radius - 25, 6);
+                }
+                ctx.restore();
+            });
 
-      // Ensure ReactDOM.createRoot is available from the global ReactDOM object
-      const root = ReactDOM.createRoot(rootElement);
-      root.render(
-        CE(React.StrictMode, null, 
-          CE(App)
-        )
-      );
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 40, 0, 2 * Math.PI);
+            ctx.fillStyle = '#0f172a';
+            ctx.fill();
+        }
+
+        function addName() {
+            const input = document.getElementById('nameInput');
+            const name = input.value.trim();
+            if (name && !isSpinning) {
+                names.push(name);
+                input.value = '';
+                updateNamesList();
+                drawWheel('namesWheel', names);
+            }
+        }
+
+        function removeTopic(index) {
+            if (isSpinning) return;
+            topics.splice(index, 1);
+            drawWheel('topicsWheel', topics);
+            renderTopicList();
+        }
+
+        function updateNamesList() {
+            const container = document.getElementById('namesList');
+            const countEl = document.getElementById('namesCount');
+            if (countEl) countEl.innerText = `${names.length} Personen`;
+            container.innerHTML = names.map(n => `<span class="bg-white/5 border border-white/10 px-2 py-1 rounded text-slate-300">${n}</span>`).join('');
+        }
+
+        function renderTopicList() {
+            const container = document.getElementById('topicPool');
+            container.innerHTML = topics.map((t, idx) => `
+                <li class="flex justify-between items-center bg-white/5 p-1 px-2 rounded hover:bg-white/10 group transition-all">
+                    <span>${t === "Joker" ? "🤡 Joker" : t}</span>
+                    <button onclick="removeTopic(${idx})" class="text-red-400 opacity-0 group-hover:opacity-100 font-bold hover:scale-110">✕</button>
+                </li>
+            `).join('');
+        }
+
+        async function spinBoth() {
+            if (isSpinning || names.length === 0 || topics.length === 0) return;
+            isSpinning = true;
+            
+            document.getElementById('masterSpinBtn').disabled = true;
+            document.getElementById('jokerSubtext').classList.add('hidden');
+            document.getElementById('jokerIconLeft').classList.add('hidden');
+            document.getElementById('jokerIconRight').classList.add('hidden');
+
+            const nameCanvas = document.getElementById('namesWheel');
+            const topicCanvas = document.getElementById('topicsWheel');
+
+            const nRot = 7 + Math.random() * 5;
+            const nExtra = Math.random() * 360;
+            const tRot = 7 + Math.random() * 5;
+            const tExtra = Math.random() * 360;
+
+            namesAngle += (nRot * 360 + nExtra);
+            topicsAngle += (tRot * 360 + tExtra);
+
+            nameCanvas.style.transform = `rotate(${namesAngle}deg)`;
+            topicCanvas.style.transform = `rotate(${topicsAngle}deg)`;
+
+            setTimeout(() => {
+                const nDeg = (360 - (namesAngle % 360) + 270) % 360;
+                const nIdx = Math.floor(nDeg / (360 / names.length)) % names.length;
+                const winnerName = names[nIdx];
+
+                const tDeg = (360 - (topicsAngle % 360) + 270) % 360;
+                const tIdx = Math.floor(tDeg / (360 / topics.length)) % topics.length;
+                const winnerTopic = topics[tIdx];
+
+                if (winnerTopic === "Joker") {
+                    document.getElementById('jokerSubtext').classList.remove('hidden');
+                    document.getElementById('jokerIconLeft').classList.remove('hidden');
+                    document.getElementById('jokerIconRight').classList.remove('hidden');
+                }
+                
+                showCombinedResult(winnerName, winnerTopic);
+                saveToGoogleSheets(winnerName, winnerTopic);
+
+                names.splice(nIdx, 1);
+                
+                setTimeout(() => {
+                    drawWheel('namesWheel', names, names.length === 0 ? "Alle gepitcht!" : "");
+                    updateNamesList();
+                    isSpinning = false;
+                    document.getElementById('masterSpinBtn').disabled = false;
+                }, 500);
+            }, 4100);
+        }
+
+        function showCombinedResult(name, topic) {
+            document.getElementById('winnerName').innerText = name;
+            document.getElementById('winnerTopic').innerText = topic;
+            document.getElementById('winnerModal').classList.remove('hidden');
+        }
+
+        async function saveToGoogleSheets(name, topic) {
+            const status = document.getElementById('statusMsg');
+            if (!scriptURL) {
+                status.innerText = "Hinweis: Keine Google Script URL hinterlegt.";
+                return;
+            }
+
+            status.innerText = "Speichere in Google Sheets...";
+            
+            try {
+                await fetch(scriptURL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    cache: 'no-cache',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, topic, timestamp: new Date().toLocaleString() })
+                });
+                status.innerText = "Erfolgreich gespeichert!";
+            } catch (error) {
+                status.innerText = "Fehler beim Speichern in Tabelle.";
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('winnerModal').classList.add('hidden');
+        }
+
+        document.getElementById('nameInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addName();
+        });
+
+        window.onload = init;
     </script>
 </body>
 </html>
