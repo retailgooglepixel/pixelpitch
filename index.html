@@ -34,6 +34,7 @@
         canvas {
             width: 100%;
             height: 100%;
+            /* Wir steuern die Transition jetzt präziser über JS für den Sound-Sync */
             transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1);
         }
 
@@ -96,7 +97,7 @@
     <main class="max-w-6xl mx-auto">
         <div class="flex flex-col items-center mb-8">
             <button onclick="spinBoth()" id="masterSpinBtn" class="px-12 py-6 rounded-2xl btn-pixel text-2xl font-black uppercase tracking-[0.2em] shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed">
-                PITCH STARTEN!
+                Spin the wheels
             </button>
         </div>
 
@@ -149,7 +150,7 @@
             <div class="space-y-8 my-8">
                 <div>
                     <div class="text-slate-400 text-xs uppercase mb-1">Pitcher</div>
-                    <div id="winnerName" class="text-4xl md:text-6xl font-black text-white">Name</div>
+                    <div id="winnerName" class="text-4xl md:text-6xl font-black text-white uppercase tracking-wider">Name</div>
                 </div>
                 
                 <div class="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
@@ -165,19 +166,53 @@
                 </div>
             </div>
 
-            <!-- Status-Bereich für Google Sheets -->
-            <div id="statusContainer" class="mb-6">
-                <div id="statusMsg" class="text-xs text-slate-400">Warte auf Ergebnis...</div>
+            <div id="statusContainer" class="mb-6 h-4">
+                <div id="statusMsg" class="text-xs text-slate-400 uppercase tracking-widest font-bold"></div>
             </div>
 
-            <button onclick="closeModal()" class="btn-pixel px-12 py-4 rounded-xl font-bold text-lg">Verstanden</button>
+            <button onclick="closeModal()" class="btn-pixel px-12 py-4 rounded-xl font-bold text-lg w-full md:w-auto">Verstanden</button>
         </div>
     </div>
 
     <script>
         // --- KONFIGURATION ---
-        // Die von dir bereitgestellte URL ist hier fest eingetragen:
         const scriptURL = "https://script.google.com/macros/s/AKfycbwtMafcYmtIghnjxp2cfyj_39Alk5PRzlvmfZzdTSklP0Duxbjf9lfXuleKfXe_JVM/exec"; 
+
+        // SOUND ENGINE (Web Audio API)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playTick() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.05);
+            gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.05);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.05);
+        }
+
+        function playWinSound() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const now = audioCtx.currentTime;
+            const freqs = [523.25, 659.25, 783.99, 1046.50]; // C-Dur Arpeggio
+            freqs.forEach((f, i) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(f, now + i * 0.1);
+                gain.gain.setValueAtTime(0.1, now + i * 0.1);
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.1 + 0.5);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now + i * 0.1);
+                osc.stop(now + i * 0.1 + 0.5);
+            });
+        }
 
         let names = [];
         let topics = [
@@ -285,7 +320,7 @@
             const container = document.getElementById('namesList');
             const countEl = document.getElementById('namesCount');
             if (countEl) countEl.innerText = `${names.length} Personen`;
-            container.innerHTML = names.map(n => `<span class="bg-white/5 border border-white/10 px-2 py-1 rounded text-slate-300">${n}</span>`).join('');
+            container.innerHTML = names.map(n => `<span class="bg-white/5 border border-white/10 px-2 py-1 rounded text-slate-300 font-medium">${n}</span>`).join('');
         }
 
         function renderTopicList() {
@@ -293,35 +328,69 @@
             container.innerHTML = topics.map((t, idx) => `
                 <li class="flex justify-between items-center bg-white/5 p-1 px-2 rounded hover:bg-white/10 group transition-all">
                     <span>${t === "Joker" ? "🤡 Joker" : t}</span>
-                    <button onclick="removeTopic(${idx})" class="text-red-400 opacity-0 group-hover:opacity-100 font-bold hover:scale-110">✕</button>
+                    <button onclick="removeTopic(${idx})" class="text-red-400 opacity-0 group-hover:opacity-100 font-bold hover:scale-110 px-1">✕</button>
                 </li>
             `).join('');
         }
 
+        // Ticking-Sync Hilfsfunktion
+        function startTickLoop(totalDegrees, itemCount) {
+            let lastSegment = -1;
+            const startTime = performance.now();
+            const duration = 4000;
+            const segmentAngle = 360 / itemCount;
+
+            function check() {
+                const now = performance.now();
+                const progress = (now - startTime) / duration;
+                if (progress >= 1) return;
+
+                // Cubic-bezier approximation für den Sound-Sync
+                // Da wir CSS cubic-bezier(0.15, 0, 0.15, 1) nutzen:
+                const easeOut = 1 - Math.pow(1 - progress, 3); 
+                const currentRotation = totalDegrees * easeOut;
+                const currentSegment = Math.floor((currentRotation % 360) / segmentAngle);
+
+                if (currentSegment !== lastSegment) {
+                    playTick();
+                    lastSegment = currentSegment;
+                }
+                requestAnimationFrame(check);
+            }
+            requestAnimationFrame(check);
+        }
+
         async function spinBoth() {
             if (isSpinning || names.length === 0 || topics.length === 0) return;
-            isSpinning = true;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
             
+            isSpinning = true;
             document.getElementById('masterSpinBtn').disabled = true;
             document.getElementById('jokerSubtext').classList.add('hidden');
             document.getElementById('jokerIconLeft').classList.add('hidden');
             document.getElementById('jokerIconRight').classList.add('hidden');
-            document.getElementById('statusMsg').innerText = "Räder drehen...";
-            document.getElementById('statusMsg').className = "text-xs text-slate-400";
+            document.getElementById('statusMsg').innerText = "RÄDER DREHEN...";
+            document.getElementById('statusMsg').className = "text-xs text-sky-400 uppercase tracking-widest font-bold";
 
             const nameCanvas = document.getElementById('namesWheel');
             const topicCanvas = document.getElementById('topicsWheel');
 
-            const nRot = 7 + Math.random() * 5;
+            const nRot = 8 + Math.random() * 5;
             const nExtra = Math.random() * 360;
-            const tRot = 7 + Math.random() * 5;
+            const tRot = 8 + Math.random() * 5;
             const tExtra = Math.random() * 360;
 
-            namesAngle += (nRot * 360 + nExtra);
-            topicsAngle += (tRot * 360 + tExtra);
+            const nTotal = nRot * 360 + nExtra;
+            const tTotal = tRot * 360 + tExtra;
+
+            namesAngle += nTotal;
+            topicsAngle += tTotal;
 
             nameCanvas.style.transform = `rotate(${namesAngle}deg)`;
             topicCanvas.style.transform = `rotate(${topicsAngle}deg)`;
+
+            // Sound-Loop starten (wir syncen auf das Namensrad, da es meist mehr Segmente hat)
+            startTickLoop(nTotal, names.length);
 
             setTimeout(() => {
                 const nDeg = (360 - (namesAngle % 360) + 270) % 360;
@@ -331,6 +400,8 @@
                 const tDeg = (360 - (topicsAngle % 360) + 270) % 360;
                 const tIdx = Math.floor(tDeg / (360 / topics.length)) % topics.length;
                 const winnerTopic = topics[tIdx];
+
+                playWinSound();
 
                 if (winnerTopic === "Joker") {
                     document.getElementById('jokerSubtext').classList.remove('hidden');
@@ -344,7 +415,7 @@
                 names.splice(nIdx, 1);
                 
                 setTimeout(() => {
-                    drawWheel('namesWheel', names, names.length === 0 ? "Alle gepitcht!" : "");
+                    drawWheel('namesWheel', names, names.length === 0 ? "ALLE GEPITCHT!" : "");
                     updateNamesList();
                     isSpinning = false;
                     document.getElementById('masterSpinBtn').disabled = false;
@@ -360,26 +431,14 @@
 
         async function saveToGoogleSheets(name, topic) {
             const status = document.getElementById('statusMsg');
-            
-            // Detaillierter Check der URL Variable
-            if (!scriptURL || scriptURL.trim() === "" || scriptURL.includes("URL_HIER")) {
-                status.innerText = "Fehler: Google Script URL nicht korrekt konfiguriert.";
-                status.className = "text-xs text-red-400 font-bold";
-                return;
-            }
+            if (!scriptURL || scriptURL.length < 20) return;
 
-            status.innerText = "Speichere in Google Sheets...";
-            status.className = "text-xs text-sky-400";
+            status.innerText = "SPEICHERE IN GOOGLE SHEETS...";
+            status.className = "text-xs text-sky-400 uppercase tracking-widest animate-pulse font-bold";
             
-            const payload = { 
-                name: name, 
-                topic: topic, 
-                timestamp: new Date().toLocaleString("de-DE") 
-            };
+            const payload = { name, topic, timestamp: new Date().toLocaleString("de-DE") };
 
             try {
-                // Bei Google Apps Script nutzen wir mode: 'no-cors', 
-                // da Google keinen CORS-Header sendet, aber die Daten trotzdem ankommen.
                 await fetch(scriptURL, {
                     method: 'POST',
                     mode: 'no-cors',
@@ -387,15 +446,11 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                
-                // Da no-cors keine Antwort lesen kann, gehen wir bei Erfolg des Fetch-Calls 
-                // davon aus, dass die Daten gesendet wurden.
-                status.innerText = "Erfolgreich in Tabelle gespeichert!";
-                status.className = "text-xs text-emerald-400 font-bold";
+                status.innerText = "ERFOLGREICH GESPEICHERT!";
+                status.className = "text-xs text-emerald-400 font-bold uppercase tracking-widest";
             } catch (error) {
-                console.error("Fetch Fehler:", error);
-                status.innerText = "Verbindungsfehler beim Speichern.";
-                status.className = "text-xs text-red-400 font-bold";
+                status.innerText = "VERBINDUNGSFEHLER!";
+                status.className = "text-xs text-red-500 font-bold uppercase tracking-widest";
             }
         }
 
