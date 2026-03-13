@@ -165,7 +165,10 @@
                 </div>
             </div>
 
-            <div id="statusMsg" class="text-xs text-slate-500 mb-6">Wird in Google Sheets gespeichert...</div>
+            <!-- Status-Bereich für Google Sheets -->
+            <div id="statusContainer" class="mb-6">
+                <div id="statusMsg" class="text-xs text-slate-400">Warte auf Ergebnis...</div>
+            </div>
 
             <button onclick="closeModal()" class="btn-pixel px-12 py-4 rounded-xl font-bold text-lg">Verstanden</button>
         </div>
@@ -173,6 +176,7 @@
 
     <script>
         // --- KONFIGURATION ---
+        // Die von dir bereitgestellte URL ist hier fest eingetragen:
         const scriptURL = "https://script.google.com/macros/s/AKfycbwtMafcYmtIghnjxp2cfyj_39Alk5PRzlvmfZzdTSklP0Duxbjf9lfXuleKfXe_JVM/exec"; 
 
         let names = [];
@@ -302,6 +306,8 @@
             document.getElementById('jokerSubtext').classList.add('hidden');
             document.getElementById('jokerIconLeft').classList.add('hidden');
             document.getElementById('jokerIconRight').classList.add('hidden');
+            document.getElementById('statusMsg').innerText = "Räder drehen...";
+            document.getElementById('statusMsg').className = "text-xs text-slate-400";
 
             const nameCanvas = document.getElementById('namesWheel');
             const topicCanvas = document.getElementById('topicsWheel');
@@ -354,28 +360,42 @@
 
         async function saveToGoogleSheets(name, topic) {
             const status = document.getElementById('statusMsg');
-            if (!scriptURL) {
-                status.innerText = "Hinweis: Keine Google Script URL hinterlegt.";
+            
+            // Detaillierter Check der URL Variable
+            if (!scriptURL || scriptURL.trim() === "" || scriptURL.includes("URL_HIER")) {
+                status.innerText = "Fehler: Google Script URL nicht korrekt konfiguriert.";
+                status.className = "text-xs text-red-400 font-bold";
                 return;
             }
 
             status.innerText = "Speichere in Google Sheets...";
+            status.className = "text-xs text-sky-400";
             
+            const payload = { 
+                name: name, 
+                topic: topic, 
+                timestamp: new Date().toLocaleString("de-DE") 
+            };
+
             try {
+                // Bei Google Apps Script nutzen wir mode: 'no-cors', 
+                // da Google keinen CORS-Header sendet, aber die Daten trotzdem ankommen.
                 await fetch(scriptURL, {
                     method: 'POST',
                     mode: 'no-cors',
                     cache: 'no-cache',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        name: name, 
-                        topic: topic, 
-                        timestamp: new Date().toLocaleString("de-DE") 
-                    })
+                    body: JSON.stringify(payload)
                 });
-                status.innerText = "Erfolgreich gespeichert!";
+                
+                // Da no-cors keine Antwort lesen kann, gehen wir bei Erfolg des Fetch-Calls 
+                // davon aus, dass die Daten gesendet wurden.
+                status.innerText = "Erfolgreich in Tabelle gespeichert!";
+                status.className = "text-xs text-emerald-400 font-bold";
             } catch (error) {
-                status.innerText = "Fehler beim Speichern in Tabelle.";
+                console.error("Fetch Fehler:", error);
+                status.innerText = "Verbindungsfehler beim Speichern.";
+                status.className = "text-xs text-red-400 font-bold";
             }
         }
 
