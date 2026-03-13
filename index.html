@@ -158,7 +158,7 @@
                     <div class="text-slate-400 text-xs uppercase mb-1">Thema</div>
                     <div class="flex items-center justify-center gap-3">
                         <span id="jokerIconLeft" class="text-4xl md:text-6xl hidden joker-animation">🤡</span>
-                        <div id="winnerTopic" class="text-3xl md:text-5xl font-bold text-emerald-400 italic">Thema</div>
+                        <div id="winnerTopic" class="text-3xl md:text-5xl font-bold text-emerald-400 italic text-center">Thema</div>
                         <span id="jokerIconRight" class="text-4xl md:text-6xl hidden joker-animation">🤡</span>
                     </div>
                     <div id="jokerSubtext" class="text-sm text-amber-400 mt-2 hidden font-bold tracking-widest uppercase">Freie Themenwahl!</div>
@@ -173,7 +173,7 @@
 
     <script>
         // --- KONFIGURATION ---
-        const scriptURL = ""; 
+        const scriptURL = "https://script.google.com/macros/s/AKfycbwtMafcYmtIghnjxp2cfyj_39Alk5PRzlvmfZzdTSklP0Duxbjf9lfXuleKfXe_JVM/exec"; 
 
         let names = [];
         let topics = [
@@ -226,7 +226,7 @@
                 ctx.arc(centerX, centerY, radius, angle, angle + arcSize);
                 
                 if (item === "Joker") {
-                    ctx.fillStyle = "#f59e0b"; // Gold für Joker
+                    ctx.fillStyle = "#f59e0b";
                 } else {
                     ctx.fillStyle = colors[i % colors.length];
                 }
@@ -244,7 +244,6 @@
                 ctx.fillStyle = "#fff";
                 
                 if (item === "Joker") {
-                    // Joker mit Text und Icon
                     ctx.font = "bold 16px Inter";
                     ctx.fillText("🤡 Joker", radius - 15, 6);
                 } else {
@@ -368,7 +367,11 @@
                     mode: 'no-cors',
                     cache: 'no-cache',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, topic, timestamp: new Date().toLocaleString() })
+                    body: JSON.stringify({ 
+                        name: name, 
+                        topic: topic, 
+                        timestamp: new Date().toLocaleString("de-DE") 
+                    })
                 });
                 status.innerText = "Erfolgreich gespeichert!";
             } catch (error) {
